@@ -3,6 +3,7 @@
 *.conf
 venv3/
 venv2/
+bin/
 
 
 # Byte-compiled / optimized / DLL files
