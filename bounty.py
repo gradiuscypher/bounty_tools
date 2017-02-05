@@ -7,6 +7,9 @@ import configparser
 import argparse
 import time
 import progressbar
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
+from bounty_db import Host, Base
 
 
 def setup_vm(manager, config, verbose):
@@ -102,7 +105,36 @@ def run_recon(manager, droplet, config, workspace, domain_list):
     print()
 
 
-def import_to_db():
+def import_to_db(manager, droplet, config, workspace):
+    # Setup SSH
+    ssh_key_filename = config.get("DigitalOcean", "ssh_key_filename")
+    ssh = paramiko.SSHClient()
+    ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+    print("Connecting to the droplet...")
+    ssh.connect(droplet.ip_address, username="root", key_filename=ssh_key_filename)
+
+    # Collect recon-ng db file
+    sftp = ssh.open_sftp()
+    sftp.chdir("/root/.recon-ng/workspaces/{}".format(workspace))
+    sftp.get("data.db", "{}.db".format(workspace))
+
+    # Build the DB connection and import the data
+    engine = create_engine("sqlite:///recon.db")
+    Base.metadata.bind = engine
+    DBSession = sessionmaker(bind=engine)
+    session = DBSession()
+
+    # Iterate through recon-ng db and add host data to recon.db
+    # new_host = Host(ip_address="0.0.0.0", host="testhost", source="recon")
+    # session.add(new_host)
+    # session.commit()
+
+
+def generate_report():
+    pass
+
+
+def cleanup_droplet():
     pass
 
 
@@ -111,6 +143,9 @@ if __name__ == "__main__":
     parser.add_argument("--config", help="Config file to use rather than the default")
     parser.add_argument("--setupvm", help="Setup recon VM", action="store_true")
     parser.add_argument("--verbose", help="Verbose logging", action="store_true")
+    parser.add_argument("--fullrecon", help="Setup recon VM", action="store_true")
+    parser.add_argument("--domains", help="List of domains to target", nargs='+')
+    parser.add_argument("--workspace", help="Name of the workspace")
     opts = parser.parse_args()
 
     # Read from the config file
@@ -125,3 +160,9 @@ if __name__ == "__main__":
 
     if opts.setupvm:
         setup_vm(manager, config, opts.verbose)
+
+    elif opts.fullrecon and (opts.domains is not None) and (opts.workspace is not None):
+        droplet = setup_vm(manager, config, opts.verbose)
+        workspace = opts.workspace
+        domains = opts.domains
+        run_recon(manager, droplet, config, workspace, domains)
