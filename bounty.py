@@ -48,7 +48,7 @@ def setup_vm(manager, config, verbose):
     print()
     print("Setting up the droplet with the configuration script...")
     _, stdout, stderr = ssh.exec_command(
-        "wget -O - https://gist.githubusercontent.com/gradiuscypher/692b62959734d6c8416314f4f5ae5756/raw/29eb0cab8d545d5fbad6dc9f10a9285526a5d37b/gistfile1.txt | bash")
+        "wget -O - https://raw.githubusercontent.com/gradiuscypher/bounty_tools/master/scripts/setup_do_vm.sh | bash")
 
     # Print the output of configuration
     for line in iter(lambda: stdout.readline(2048), ""):
