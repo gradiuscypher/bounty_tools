@@ -1,15 +1,18 @@
 #!/usr/bin/env python
 
 
-import paramiko
-import digitalocean
-import configparser
 import argparse
+import configparser
 import time
+import digitalocean
+import paramiko
 import progressbar
+import sqlite3
+import db.database
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from bounty_db import Host, Base
+from db.database import db_session
+from db.models import Host
 
 
 def setup_vm(manager, config, verbose):
@@ -48,7 +51,7 @@ def setup_vm(manager, config, verbose):
     print()
     print("Setting up the droplet with the configuration script...")
     _, stdout, stderr = ssh.exec_command(
-        "wget -O - https://raw.githubusercontent.com/gradiuscypher/bounty_tools/master/scripts/setup_do_vm.sh | bash")
+        "wget -O - https://gist.githubusercontent.com/gradiuscypher/692b62959734d6c8416314f4f5ae5756/raw/29eb0cab8d545d5fbad6dc9f10a9285526a5d37b/gistfile1.txt | bash")
 
     # Print the output of configuration
     for line in iter(lambda: stdout.readline(2048), ""):
@@ -114,28 +117,29 @@ def import_to_db(manager, droplet, config, workspace):
     ssh.connect(droplet.ip_address, username="root", key_filename=ssh_key_filename)
 
     # Collect recon-ng db file
+    print("Downloading recon-ng db...")
     sftp = ssh.open_sftp()
     sftp.chdir("/root/.recon-ng/workspaces/{}".format(workspace))
     sftp.get("data.db", "{}.db".format(workspace))
 
-    # Build the DB connection and import the data
-    engine = create_engine("sqlite:///recon.db")
-    Base.metadata.bind = engine
-    DBSession = sessionmaker(bind=engine)
-    session = DBSession()
+    # Build the DB and create session object and connect to downloaded db
+    db.database.init_db()
+    session = db_session()
+    conn = sqlite3.connect('{}.db'.format(workspace))
+    cursor = conn.cursor()
 
     # Iterate through recon-ng db and add host data to recon.db
-    # new_host = Host(ip_address="0.0.0.0", host="testhost", source="recon")
-    # session.add(new_host)
-    # session.commit()
+    print("Pulling data from recon-ng db to local db...")
+    for row in cursor.execute("select * from hosts"):
+        h = Host(host=row[0], ip_address=row[1], source=row[6], workspace=workspace)
+        session.add(h)
+        session.commit()
 
 
-def generate_report():
-    pass
-
-
-def cleanup_droplet():
-    pass
+def cleanup_droplet(droplet):
+    print("Destroying the recon droplet...")
+    droplet.destroy()
+    print("Destroyed.")
 
 
 if __name__ == "__main__":
@@ -166,3 +170,6 @@ if __name__ == "__main__":
         workspace = opts.workspace
         domains = opts.domains
         run_recon(manager, droplet, config, workspace, domains)
+        import_to_db(manager, droplet, config, workspace)
+        cleanup_droplet(droplet)
+
