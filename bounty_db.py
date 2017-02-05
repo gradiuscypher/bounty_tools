@@ -14,6 +14,7 @@ class Host(Base):
     ip_address = Column(String)
     host = Column(String)
     source = Column(String)
+    workspace = Column(String)
 
 engine = create_engine("sqlite:///recon.db")
 Base.metadata.create_all(engine)
