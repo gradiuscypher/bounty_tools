@@ -47,15 +47,18 @@ def setup_vm(manager, config, verbose):
 
     # Configure the VM with the setup script
     print()
+    setup_script = config.get("DigitalOcean", "setup_script")
     print("Setting up the droplet with the configuration script...")
     _, stdout, stderr = ssh.exec_command(
-        "wget -O - https://gist.githubusercontent.com/gradiuscypher/692b62959734d6c8416314f4f5ae5756/raw/29eb0cab8d545d5fbad6dc9f10a9285526a5d37b/gistfile1.txt | bash")
+        "wget -O - {} | bash".format(setup_script))
 
     # Print the output of configuration
     for line in iter(lambda: stdout.readline(2048), ""):
         print(line)
-    print("I'm done setting up the droplet.")
+    print("Droplet Created.")
 
+    print(" ID | IP Addr | Name | Tags")
+    print("{0.id} | {0.ip_address} | {0.name} | {0.tags}".format(droplet))
     return droplet
 
 
@@ -164,8 +167,11 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Command line tool for bounty management.")
     parser.add_argument("--config", help="Config file to use rather than the default")
     parser.add_argument("--setupvm", help="Setup recon VM", action="store_true")
+    parser.add_argument("--droplets", help="List DO droplets and their IDs", action="store_true")
     parser.add_argument("--verbose", help="Verbose logging", action="store_true")
-    parser.add_argument("--fullrecon", help="Setup recon VM", action="store_true")
+    parser.add_argument("--recon", help="Run recon tasks on supplied droplet ID", metavar="DROPLET_ID")
+    parser.add_argument("--importdb", help="Import recon-ng DB from supplied droplet ID", metavar="DROPLET_ID")
+    parser.add_argument("--fullrecon", help="Setup recon VM and run recon tasks", action="store_true")
     parser.add_argument("--domains", help="List of domains to target", nargs='+')
     parser.add_argument("--workspace", help="Name of the workspace")
     opts = parser.parse_args()
@@ -191,3 +197,20 @@ if __name__ == "__main__":
         import_to_db(manager, droplet, config, workspace)
         cleanup_droplet(droplet)
 
+    elif opts.droplets:
+        droplets = manager.get_all_droplets()
+
+        print("Droplets Running:\n")
+        print(" ID | IP Addr | Name | Tags")
+        print("===========================")
+        for droplet in droplets:
+            print("{0.id} | {0.ip_address} | {0.name} | {0.tags}".format(droplet))
+        print()
+
+    elif opts.importdb and (opts.workspace is not None):
+        droplet = manager.get_droplet(opts.importdb)
+        import_to_db(manager, droplet, config, opts.workspace)
+
+    elif opts.recon and (opts.domains is not None) and (opts.workspace is not None):
+        droplet = manager.get_droplet(opts.recon)
+        run_recon(manager, droplet, config, opts.workspace, opts.domains)

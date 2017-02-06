@@ -25,16 +25,20 @@ def shodan_enrichment(target_host, config):
             if port in port_list:
                 print("This port already exists.")
             else:
+                print("Adding port to host.")
                 p = Port(number=port, host=target_host)
                 session.add(p)
                 session.commit()
 
         # Add other Shodan info
 
+        # Sleep to try and ratelimit
+        time.sleep(.5)
+
     except shodan.APIError:
-        print("API Error, sleeping 5 seconds")
+        print("API Error, sleeping 1 second")
         print(traceback.format_exc())
-        time.sleep(5)
+        time.sleep(1)
     except:
         print(traceback.format_exc())
 

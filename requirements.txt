@@ -1,5 +1,8 @@
 appdirs==1.4.0
 cffi==1.9.1
+click==6.7
+click-plugins==1.0.3
+colorama==0.3.7
 cryptography==1.7.2
 decorator==4.0.11
 idna==2.2
@@ -20,7 +23,9 @@ pyparsing==2.1.10
 python-digitalocean==1.10.1
 python-utils==2.0.1
 requests==2.13.0
+shodan==1.6.4
 simplegeneric==0.8.1
+simplejson==3.10.0
 six==1.10.0
 SQLAlchemy==1.1.5
 traitlets==4.3.1

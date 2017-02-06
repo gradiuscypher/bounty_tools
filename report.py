@@ -17,6 +17,7 @@ def console_report():
         althosts = session.query(Althosts).filter(Althosts.host_id == host.id)
         for althost in althosts:
             print("    {} | {}".format(althost.source, althost.hostname))
+        print()
 
 
 if __name__ == "__main__":
