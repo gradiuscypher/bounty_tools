@@ -22,8 +22,17 @@ class Shodan(Base):
 
 
 class Port(Base):
-    __tablename__ = 'port'
+    __tablename__ = 'ports'
     id = Column(Integer, primary_key=True)
     number = Column(Integer)
-    host = relationship(Host, backref=backref("port", uselist=True, cascade="delete,all"))
+    host = relationship(Host, backref=backref("ports", uselist=True, cascade="delete,all"))
     host_id = Column(Integer, ForeignKey('host.id'))
+
+
+class Althosts(Base):
+    __tablename__ = 'althosts'
+    id = Column(Integer, primary_key=True)
+    host = relationship(Host, backref=backref("althosts", uselist=True, cascade="delete,all"))
+    host_id = Column(Integer, ForeignKey('host.id'))
+    hostname = Column(String)
+    source = Column(String)

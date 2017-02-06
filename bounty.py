@@ -9,10 +9,8 @@ import paramiko
 import progressbar
 import sqlite3
 import db.database
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
 from db.database import db_session
-from db.models import Host
+from db.models import Host, Althosts
 
 
 def setup_vm(manager, config, verbose):
@@ -131,9 +129,29 @@ def import_to_db(manager, droplet, config, workspace):
     # Iterate through recon-ng db and add host data to recon.db
     print("Pulling data from recon-ng db to local db...")
     for row in cursor.execute("select * from hosts"):
-        h = Host(host=row[0], ip_address=row[1], source=row[6], workspace=workspace)
-        session.add(h)
-        session.commit()
+        # Check if IP address already exists
+        qresult = session.query(Host).filter(Host.ip_address == row[1])
+        if qresult.count() > 0:
+            print("found a dupe")
+            first_host = qresult.first()
+
+            # Check to see if the first_host has althosts that match, to avoid dupes
+            fh_alts = session.query(Althosts).filter(Althosts.host_id == first_host.id).filter(Althosts.hostname == row[0])
+
+            if fh_alts.count() == 0:
+                print("ADDING HOSTNAME AS SECONDARY : {}".format(row[0]))
+                ah = Althosts(hostname=row[0], source=row[6], host=first_host)
+                session.add(ah)
+                session.commit()
+            else:
+                print("Duplicate AltHost: {}".format(row[0]))
+
+        #If no other IP exists
+        else:
+            print("new host")
+            h = Host(host=row[0], ip_address=row[1], source=row[6], workspace=workspace)
+            session.add(h)
+            session.commit()
 
 
 def cleanup_droplet(droplet):
