@@ -51,6 +51,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Command line tool to include more info in the bounty DB.")
     parser.add_argument("--config", help="Config file to use rather than the default")
     parser.add_argument("--shodan", help="Iterate through the host DB and add information from Shodan", action="store_true")
+    parser.add_argument("--workspace", help="Target workspace")
     opts = parser.parse_args()
 
     # Setup the db session
@@ -63,6 +64,6 @@ if __name__ == "__main__":
     else:
         config.read(opts.config)
 
-    if opts.shodan:
-        for host in session.query(Host).all():
+    if opts.shodan and opts.workspace is not None:
+        for host in session.query(Host).filter(Host.workspace == opts.workspace).all():
             shodan_enrichment(host, config)
