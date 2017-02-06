@@ -19,6 +19,9 @@ class Shodan(Base):
     id = Column(Integer, primary_key=True)
     host = relationship(Host, backref=backref("shodan", uselist=True, cascade="delete,all"))
     host_id = Column(Integer, ForeignKey('host.id'))
+    http_data = Column(String)
+    data_org = Column(String)
+    data_isp = Column(String)
 
 
 class Port(Base):
