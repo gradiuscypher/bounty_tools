@@ -135,14 +135,12 @@ def import_to_db(manager, droplet, config, workspace):
         # Check if IP address already exists
         qresult = session.query(Host).filter(Host.ip_address == row[1])
         if qresult.count() > 0:
-            print("found a dupe")
             first_host = qresult.first()
 
             # Check to see if the first_host has althosts that match, to avoid dupes
             fh_alts = session.query(Althosts).filter(Althosts.host_id == first_host.id).filter(Althosts.hostname == row[0])
 
             if fh_alts.count() == 0:
-                print("ADDING HOSTNAME AS SECONDARY : {}".format(row[0]))
                 ah = Althosts(hostname=row[0], source=row[6], host=first_host)
                 session.add(ah)
                 session.commit()
