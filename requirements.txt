@@ -13,7 +13,6 @@ paramiko==2.1.1
 pexpect==4.2.1
 pickleshare==0.7.4
 pkg-resources==0.0.0
-progressbar2==3.12.0
 prompt-toolkit==1.0.9
 ptyprocess==0.5.1
 pyasn1==0.2.1

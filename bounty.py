@@ -6,7 +6,6 @@ import configparser
 import time
 import digitalocean
 import paramiko
-import progressbar
 import sqlite3
 import db.database
 from db.database import db_session
@@ -21,10 +20,10 @@ def setup_vm(manager, config, verbose):
 
     print("Waiting for the droplet to be active...")
     # Wait for the DO droplet to become active
-    bar = progressbar.ProgressBar()
     while droplet.status != "active":
-        print("Sleeping for 30 seconds to wait for the droplet to become active.")
-        for i in (bar(range(30))):
+        for i in range(30):
+            # Overwrites the previous line with the next line, removing the dependency of progressbar2
+            print("Sleeping for {} seconds to wait for the droplet to become active.".format(30-i), end="\r")
             time.sleep(1)
         droplet.load()
 
@@ -35,10 +34,11 @@ def setup_vm(manager, config, verbose):
 
     # Setup the SSH connection
     print()
-    print("Sleeping for 30 seconds to wait for SSH to be ready...")
-    bar = progressbar.ProgressBar()
-    for i in (bar(range(30))):
+    for i in range(30):
+        print("Sleeping for {} seconds to wait for SSH to be ready...".format(30-i), end="\r")
         time.sleep(1)
+    print("SSH should now be ready...")
+    droplet.load()
     ssh_key_filename = config.get("DigitalOcean", "ssh_key_filename")
     ssh = paramiko.SSHClient()
     ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
