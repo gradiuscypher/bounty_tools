@@ -11,20 +11,13 @@ def add_args(parser):
     parser.add_argument("--workspace", help="Name of the workspace")
 
 
-def parse_args(args):
+def parse_args(args, config):
     # If we were passed a --droplet argument
-    if args.runrecon is not None and args.droplet is not None:
+    if args.runrecon and args.createvm and (args.workspace is not None) and (args.domains is not None) and (args.droplet is not None):
         pass
 
     # If we were passed a --createvm argument
-    if (args.runrecon is not None) and (args.createvm is not None) and (args.workspace is not None) and (args.domains is not None):
-        # Read from the config file
-        config = configparser.RawConfigParser()
-        if args.config is None:
-            config.read("config.conf")
-        else:
-            config.read(args.config)
-
+    elif args.runrecon and args.createvm and (args.workspace is not None) and (args.domains is not None):
         droplet = do_wrapper.create_vm()
         workspace = args.workspace
         domains = args.domains
