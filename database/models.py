@@ -2,7 +2,7 @@
 
 from sqlalchemy import Column, ForeignKey, Integer, String
 from sqlalchemy.orm import relationship, backref
-from db.database import Base
+from database.database import Base
 
 
 class Host(Base):
