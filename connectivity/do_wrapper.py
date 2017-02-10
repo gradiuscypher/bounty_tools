@@ -2,15 +2,14 @@ import digitalocean
 
 
 def add_args(parser):
-    parser.add_argument("--dowrapper", help="The Digital Ocean plugin", action="store_true")
     parser.add_argument("--createvm", help="Create a Digital Ocean VM to execute on", action="store_true")
     parser.add_argument("--listdroplets", help="List available DO Droplets", action="store_true")
 
 
 def parse_args(args, config):
-    # If we were passed a --createvm argument
     if args.createvm:
         create_vm()
+
     elif args.listdroplets:
         list_droplets(config)
 

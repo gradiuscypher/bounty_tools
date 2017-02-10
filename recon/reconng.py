@@ -4,7 +4,6 @@ from connectivity import do_wrapper
 
 
 def add_args(parser):
-    parser.add_argument("--reconng", help="The recon-ng plugin", action="store_true")
     parser.add_argument("--runrecon", help="Execute recon-ng tasks", action="store_true")
     parser.add_argument("--droplet", help="Digital Ocean droplet ID for execution", action="store_true")
     parser.add_argument("--domains", help="List of domains to target", nargs='+')
