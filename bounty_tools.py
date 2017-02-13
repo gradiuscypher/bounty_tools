@@ -25,6 +25,6 @@ if __name__ == "__main__":
     else:
         config.read(opts.config)
 
-    reconng.parse_args(opts, config)
     do_wrapper.parse_args(opts, config)
+    reconng.parse_args(opts, config)
 

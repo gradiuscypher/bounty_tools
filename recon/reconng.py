@@ -4,7 +4,7 @@ from connectivity import do_wrapper
 
 
 def add_args(parser):
-    parser.add_argument("--runrecon", help="Execute recon-ng tasks", action="store_true")
+    parser.add_argument("--reconng", help="Execute recon-ng tasks", action="store_true")
     parser.add_argument("--droplet", help="Digital Ocean droplet ID for execution", action="store_true")
     parser.add_argument("--domains", help="List of domains to target", nargs='+')
     parser.add_argument("--workspace", help="Name of the workspace")
@@ -12,11 +12,11 @@ def add_args(parser):
 
 def parse_args(args, config):
     # If we were passed a --droplet argument
-    if args.runrecon and (args.workspace is not None) and (args.domains is not None) and (args.droplet is not None):
+    if args.reconng and (args.workspace is not None) and (args.domains is not None) and (args.droplet is not None):
         pass
 
     # If we were passed a --createvm argument
-    elif args.runrecon and args.createvm and (args.workspace is not None) and (args.domains is not None):
+    elif args.reconng and args.createvm and (args.workspace is not None) and (args.domains is not None):
         droplet = do_wrapper.create_vm(config)
         workspace = args.workspace
         domains = args.domains
