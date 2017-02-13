@@ -12,12 +12,12 @@ def add_args(parser):
 
 def parse_args(args, config):
     # If we were passed a --droplet argument
-    if args.runrecon and args.createvm and (args.workspace is not None) and (args.domains is not None) and (args.droplet is not None):
+    if args.runrecon and (args.workspace is not None) and (args.domains is not None) and (args.droplet is not None):
         pass
 
     # If we were passed a --createvm argument
     elif args.runrecon and args.createvm and (args.workspace is not None) and (args.domains is not None):
-        droplet = do_wrapper.create_vm()
+        droplet = do_wrapper.create_vm(config)
         workspace = args.workspace
         domains = args.domains
         run_recon(droplet, config, workspace, domains)
