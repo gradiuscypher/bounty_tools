@@ -63,6 +63,9 @@ def import_to_db(droplet, config, workspace):
 
     # Iterate through recon-ng db and add host data to recon.db
     print("Pulling data from recon-ng db to local db...")
+    new_hosts = 0
+    new_alt_hosts = 0
+    duplicates = 0
     for row in cursor.execute("select * from hosts"):
         # Check if IP address already exists
         qresult = session.query(Host).filter(Host.ip_address == row[1])
@@ -71,20 +74,21 @@ def import_to_db(droplet, config, workspace):
 
             # Check to see if the first_host has althosts that match, to avoid dupes
             fh_alts = session.query(Althosts).filter(Althosts.host_id == first_host.id).filter(Althosts.hostname == row[0])
-
-            if fh_alts.count() == 0:
+            if fh_alts.count() == 0 and (first_host.host != row[0]):
                 ah = Althosts(hostname=row[0], source=row[6], host=first_host)
                 session.add(ah)
                 session.commit()
+                new_alt_hosts += 1
             else:
-                print("Duplicate AltHost: {}".format(row[0]))
+                duplicates += 1
 
         #If no other IP exists
         else:
-            print("new host")
+            new_hosts += 1
             h = Host(host=row[0], ip_address=row[1], source=row[6], workspace=workspace)
             session.add(h)
             session.commit()
+    print("{} new hosts, {} new althosts, {} duplicates".format(new_hosts, new_alt_hosts, duplicates))
 
 
 def run_recon(droplet, config, workspace, domain_list):
