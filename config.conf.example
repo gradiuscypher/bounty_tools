@@ -2,7 +2,7 @@
 api_key =
 ssh_key_id =
 ssh_key_filename =
-setup_script = https://raw.githubusercontent.com/gradiuscypher/bounty_tools/master/scripts/setup_do_vm.sh
+setup_script = https://raw.githubusercontent.com/gradiuscypher/bounty_tools/master/setup_do_vm.sh
 
 [Shodan]
 api_key =
