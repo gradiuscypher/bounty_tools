@@ -31,4 +31,3 @@ if __name__ == "__main__":
     # Run the plugins plugins
     for plugin in plugin_list:
         plugin.parse_args(opts, config)
-

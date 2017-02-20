@@ -9,14 +9,14 @@ from database.models import Host, Althosts
 def add_args(parser):
     parser.add_argument("--runrecon", help="Execute recon-ng tasks", action="store_true")
     parser.add_argument("--autocleanup", help="Cleanup and remove the VM when completed", action="store_true")
-    parser.add_argument("--droplet", help="Digital Ocean droplet ID for execution", action="store_true")
+    parser.add_argument("--droplet", help="Digital Ocean droplet ID for execution")
     parser.add_argument("--domains", help="List of domains to target", nargs='+')
     parser.add_argument("--workspace", help="Name of the workspace")
 
 
 def parse_args(args, config):
     # If we were passed a --droplet argument
-    if args.runrecon and (args.workspace is not None) and (args.domains is not None) and args.droplet:
+    if args.runrecon and (args.workspace is not None) and (args.domains is not None) and (args.droplet is not None):
         print("Running recon with an already created VM")
 
     # If we were passed a --createvm argument
