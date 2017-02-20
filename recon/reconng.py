@@ -8,6 +8,7 @@ from database.models import Host, Althosts
 
 def add_args(parser):
     parser.add_argument("--runrecon", help="Execute recon-ng tasks", action="store_true")
+    parser.add_argument("--dbimport", help="Name of the workspace", action="store_true")
     parser.add_argument("--autocleanup", help="Cleanup and remove the VM when completed", action="store_true")
     parser.add_argument("--droplet", help="Digital Ocean droplet ID for execution")
     parser.add_argument("--domains", help="List of domains to target", nargs='+')
@@ -16,8 +17,13 @@ def add_args(parser):
 
 def parse_args(args, config):
     # If we were passed a --droplet argument
-    if args.runrecon and (args.workspace is not None) and (args.domains is not None) and (args.droplet is not None):
-        print("Running recon with an already created VM")
+    if args.droplet is not None:
+        if args.workspace is not None:
+            if args.runrecon and (args.domains is not None):
+                print("Running recon with an already created VM")
+            if args.dbimport:
+                droplet = do_wrapper.get_droplet(args.droplet, config)
+                import_to_db(droplet, config, args.workspace)
 
     # If we were passed a --createvm argument
     elif args.runrecon and args.createvm and (args.workspace is not None) and (args.domains is not None):
@@ -88,6 +94,8 @@ def import_to_db(droplet, config, workspace):
             h = Host(host=row[0], ip_address=row[1], source=row[6], workspace=workspace)
             session.add(h)
             session.commit()
+
+        print("{} new hosts, {} new althosts, {} duplicates".format(new_hosts, new_alt_hosts, duplicates), end="\r")
     print("{} new hosts, {} new althosts, {} duplicates".format(new_hosts, new_alt_hosts, duplicates))
 
 

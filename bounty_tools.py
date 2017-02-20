@@ -10,7 +10,7 @@ from reporting import console
 
 if __name__ == "__main__":
     # List of plugins to use
-    plugin_list = [reconng, do_wrapper, console]
+    plugin_list = [reconng, do_wrapper, console, shodan]
 
     parser = argparse.ArgumentParser(description="Command line tool for bounty management.")
     parser.add_argument("--config", help="Config file to use rather than the default")

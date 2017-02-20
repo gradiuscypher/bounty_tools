@@ -67,6 +67,11 @@ def create_vm(config):
     return droplet
 
 
+def get_droplet(droplet_id, config):
+    manager = digitalocean.Manager(token=config.get("DigitalOcean", "api_key"))
+    return manager.get_droplet(droplet_id)
+
+
 def list_droplets(config):
     # build the digital ocean manager object
     manager = digitalocean.Manager(token=config.get("DigitalOcean", "api_key"))
