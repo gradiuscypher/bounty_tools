@@ -9,12 +9,15 @@ from reporting import console
 
 
 if __name__ == "__main__":
+    # List of plugins to use
+    plugin_list = [reconng, do_wrapper, console]
+
     parser = argparse.ArgumentParser(description="Command line tool for bounty management.")
     parser.add_argument("--config", help="Config file to use rather than the default")
 
     # Get args from other plugins
-    reconng.add_args(parser)
-    do_wrapper.add_args(parser)
+    for plugin in plugin_list:
+        plugin.add_args(parser)
 
     opts = parser.parse_args()
 
@@ -25,6 +28,7 @@ if __name__ == "__main__":
     else:
         config.read(opts.config)
 
-    reconng.parse_args(opts, config)
-    do_wrapper.parse_args(opts, config)
+    # Run the plugins plugins
+    for plugin in plugin_list:
+        plugin.parse_args(opts, config)
 
