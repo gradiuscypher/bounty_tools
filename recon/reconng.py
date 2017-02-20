@@ -19,11 +19,12 @@ def parse_args(args, config):
     # If we were passed a --droplet argument
     if args.droplet is not None:
         if args.workspace is not None:
-            if args.runrecon and (args.domains is not None):
-                print("Running recon with an already created VM")
             if args.dbimport:
                 droplet = do_wrapper.get_droplet(args.droplet, config)
                 import_to_db(droplet, config, args.workspace)
+            elif args.runrecon and args.domains is not None:
+                droplet = do_wrapper.get_droplet(args.droplet, config)
+                run_recon(droplet, config, args.workspace, args.domains)
 
     # If we were passed a --createvm argument
     elif args.runrecon and args.createvm and (args.workspace is not None) and (args.domains is not None):
