@@ -6,6 +6,7 @@ venv3/
 venv2/
 bin/
 keys/
+private.*
 
 
 # Byte-compiled / optimized / DLL files
