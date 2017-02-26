@@ -1,9 +1,7 @@
 import paramiko
 import sqlite3
 from connectivity import do_wrapper
-from database import database
-from database.database import db_session
-from database.models import Host, Althosts
+from database.bounty_tools_db import BountyToolsDb
 
 
 def add_args(parser):
@@ -63,41 +61,29 @@ def import_to_db(droplet, config, workspace):
     sftp.get("data.db", "{}.db".format(workspace))
 
     # Build the DB and create session object and connect to downloaded db
-    database.init_db()
-    session = db_session()
     conn = sqlite3.connect('{}.db'.format(workspace))
     cursor = conn.cursor()
 
     # Iterate through recon-ng db and add host data to recon.db
     print("Pulling data from recon-ng db to local db...")
+    bounty_db = BountyToolsDb()
     new_hosts = 0
-    new_alt_hosts = 0
-    duplicates = 0
+    duplicate_hosts = 0
+
     for row in cursor.execute("select * from hosts"):
-        # Check if IP address already exists
-        qresult = session.query(Host).filter(Host.ip_address == row[1])
-        if qresult.count() > 0:
-            first_host = qresult.first()
+        hostname = row[0]
+        ip_address = row[1]
+        source = row[6]
 
-            # Check to see if the first_host has althosts that match, to avoid dupes
-            fh_alts = session.query(Althosts).filter(Althosts.host_id == first_host.id).filter(Althosts.hostname == row[0])
-            if fh_alts.count() == 0 and (first_host.host != row[0]):
-                ah = Althosts(hostname=row[0], source=row[6], host=first_host)
-                session.add(ah)
-                session.commit()
-                new_alt_hosts += 1
-            else:
-                duplicates += 1
+        added_host = bounty_db.add_host(ip_address, hostname, source, workspace)
 
-        #If no other IP exists
-        else:
+        if added_host:
             new_hosts += 1
-            h = Host(host=row[0], ip_address=row[1], source=row[6], workspace=workspace)
-            session.add(h)
-            session.commit()
+        else:
+            duplicate_hosts += 1
 
-        print("{} new hosts, {} new althosts, {} duplicates".format(new_hosts, new_alt_hosts, duplicates), end="\r")
-    print("{} new hosts, {} new althosts, {} duplicates".format(new_hosts, new_alt_hosts, duplicates))
+        print("{} new hosts, {} duplicate hosts".format(new_hosts, duplicate_hosts), end="\r")
+    print("{} new hosts, {} duplicate hosts".format(new_hosts, duplicate_hosts))
 
 
 def run_recon(droplet, config, workspace, domain_list):
