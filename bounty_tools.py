@@ -2,7 +2,7 @@
 
 import argparse
 import configparser
-from recon import reconng
+from recon import reconng, crt_ssl
 from enrichment import shodan
 from connectivity import do_wrapper
 from reporting import console
@@ -10,10 +10,11 @@ from reporting import console
 
 if __name__ == "__main__":
     # List of plugins to use
-    plugin_list = [reconng, do_wrapper, console, shodan]
+    plugin_list = [reconng, do_wrapper, console, shodan, crt_ssl]
 
     parser = argparse.ArgumentParser(description="Command line tool for bounty management.")
     parser.add_argument("--config", help="Config file to use rather than the default")
+    parser.add_argument("--debug", help="Debug printing mode", action="store_true")
 
     # Get args from other plugins
     for plugin in plugin_list:
