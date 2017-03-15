@@ -1,6 +1,7 @@
 # gradius ignores
 *.conf
 *.db
+*.json
 .idea/
 venv3/
 venv2/
