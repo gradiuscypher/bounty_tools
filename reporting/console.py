@@ -7,13 +7,19 @@ def add_args(parser):
 
 
 def parse_args(args, config):
-    if args.console:
+    if args.console and args.workspace is not None:
+        console(workspace=args.workspace)
+    elif args.console:
         console()
 
 
-def console():
+def console(workspace=None):
     session = db_session()
-    qr = session.query(Host).all()
+
+    if workspace is None:
+        qr = session.query(Host).all()
+    else:
+        qr = session.query(Host).filter(Host.workspace == workspace)
 
     for host in qr:
         port_list = [x.number for x in host.ports]
