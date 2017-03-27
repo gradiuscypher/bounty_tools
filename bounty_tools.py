@@ -5,16 +5,19 @@ import configparser
 from recon import reconng, crt_ssl
 from enrichment import shodan
 from connectivity import do_wrapper
+from database import elastic_bounty_tools
 from reporting import console
 
 
 if __name__ == "__main__":
     # List of plugins to use
-    plugin_list = [reconng, do_wrapper, console, shodan, crt_ssl]
+    plugin_list = [reconng, do_wrapper, console, shodan, crt_ssl, elastic_bounty_tools]
 
     parser = argparse.ArgumentParser(description="Command line tool for bounty management.")
     parser.add_argument("--config", help="Config file to use rather than the default")
     parser.add_argument("--debug", help="Debug printing mode", action="store_true")
+    parser.add_argument("--droplet", help="Digital Ocean droplet ID for execution")
+    parser.add_argument("--workspace", help="Name of the workspace")
 
     # Get args from other plugins
     for plugin in plugin_list:

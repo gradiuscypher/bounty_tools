@@ -8,9 +8,7 @@ def add_args(parser):
     parser.add_argument("--runrecon", help="Execute recon-ng tasks", action="store_true")
     parser.add_argument("--dbimport", help="Name of the workspace", action="store_true")
     parser.add_argument("--autocleanup", help="Cleanup and remove the VM when completed", action="store_true")
-    parser.add_argument("--droplet", help="Digital Ocean droplet ID for execution")
     parser.add_argument("--domains", help="List of domains to target", nargs='+')
-    parser.add_argument("--workspace", help="Name of the workspace")
 
 
 def parse_args(args, config):
