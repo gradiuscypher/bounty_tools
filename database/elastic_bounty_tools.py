@@ -65,16 +65,16 @@ def reconng_import(args, config):
         if hostname not in host_dict.keys():
             host_dict[hostname] = []
             host_dict[hostname].append(ip_address)
-            added_host = add_host(ip_address, hostname, source, workspace)
+            add_host(ip_address, hostname, source, workspace)
+            new_hosts += 1
+
+        # If the host has been seen, but the IP has not
+        elif ip_address not in host_dict[hostname]:
+            add_host(ip_address, hostname, source, workspace)
             new_hosts += 1
 
         else:
-            # If the host has been seen, but the IP has not
-            if ip_address not in host_dict[hostname]:
-                added_host = add_host(ip_address, hostname, source, workspace)
-                new_hosts += 1
-            else:
-                duplicate_hosts += 1
+            duplicate_hosts += 1
 
         print("{} new hosts, {} duplicate hosts".format(new_hosts, duplicate_hosts), end="\r")
     print("{} new hosts, {} duplicate hosts".format(new_hosts, duplicate_hosts))
