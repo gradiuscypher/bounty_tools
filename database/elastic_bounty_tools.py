@@ -42,7 +42,7 @@ def reconng_import(args, config):
         ssh.connect(droplet.ip_address, username="root", key_filename=ssh_key_filename)
 
         # Collect recon-ng db file
-        print("Downloading recon-ng db...")
+        print("Downloading recon-ng db for {}".format(workspace))
         sftp = ssh.open_sftp()
         sftp.chdir("/root/.recon-ng/workspaces/{}".format(workspace))
         sftp.get("data.db", "{}.db".format(workspace))
@@ -57,20 +57,27 @@ def reconng_import(args, config):
     duplicate_hosts = 0
 
     query = "select * from hosts group by ip_address, host"
+    total_host_count = cursor.execute("select count(host) from hosts").fetchone()[0]
+    print("{} total hosts in db...".format(total_host_count))
     for row in cursor.execute(query):
         hostname = str(row[0])
         ip_address = str(row[1])
         source = str(row[6])
 
-        # If the hostname has never been seen, add to dict and add as a host
-        if hostname not in host_dict.keys():
-            host_dict[hostname] = []
-            host_dict[hostname].append(ip_address)
-            add_host(ip_address, hostname, source, workspace)
-            new_hosts += 1
+        # Check if the host/ip combination is already in Elasticsearch
+        es_query = {
+            "query": {
+                "bool": {
+                    "must": [
+                        {"term": {"ip_address": ip_address}},
+                        {"term": {"hostname": hostname}},
+                    ],
+                }
+            }
+        }
+        result = elastic.search(index="bug_bounty", doc_type="host", body=es_query)
 
-        # If the host has been seen, but the IP has not
-        elif ip_address not in host_dict[hostname]:
+        if result['hits']['total'] <= 0:
             add_host(ip_address, hostname, source, workspace)
             new_hosts += 1
 
@@ -86,9 +93,9 @@ def create_index():
         host_mapping = {
             "host": {
                 "properties": {
-                    "ip_address": {"type": "string"},
-                    "source": {"type": "string"},
-                    "workspace": {"type": "string"},
+                    "ip_address": {"type": "ip"},
+                    "source": {"type": "string", "index": "not_analyzed"},
+                    "workspace": {"type": "string", "index": "not_analyzed"},
                     "hostname": {"type": "string", "index": "not_analyzed"},
                     "timestamp": {"type": "date"},
                 }
@@ -98,9 +105,9 @@ def create_index():
         shodan_port_mapping = {
             "shodan_port": {
                 "properties": {
-                    "ip_address": {"type": "string"},
-                    "source": {"type": "string"},
-                    "workspace": {"type": "string"},
+                    "ip_address": {"type": "ip"},
+                    "source": {"type": "string", "index": "not_analyzed"},
+                    "workspace": {"type": "string", "index": "not_analyzed"},
                     "hostname": {"type": "string", "index": "not_analyzed"},
                     "port": {"type": "integer"},
                     "timestamp": {"type": "date"},
@@ -111,9 +118,9 @@ def create_index():
         shodan_metadata_mapping = {
             "shodan_metadata": {
                 "properties": {
-                    "ip_address": {"type": "string"},
-                    "source": {"type": "string"},
-                    "workspace": {"type": "string"},
+                    "ip_address": {"type": "ip"},
+                    "source": {"type": "string", "index": "not_analyzed"},
+                    "workspace": {"type": "string", "index": "not_analyzed"},
                     "hostname": {"type": "string", "index": "not_analyzed"},
                     "timestamp": {"type": "date"},
                 }

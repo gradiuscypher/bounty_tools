@@ -7,11 +7,12 @@ from enrichment import shodan
 from connectivity import do_wrapper
 from database import elastic_bounty_tools
 from reporting import console
+from automation import automation
 
 
 if __name__ == "__main__":
     # List of plugins to use
-    plugin_list = [reconng, do_wrapper, console, shodan, crt_ssl, elastic_bounty_tools]
+    plugin_list = [reconng, do_wrapper, console, shodan, crt_ssl, elastic_bounty_tools, automation]
 
     parser = argparse.ArgumentParser(description="Command line tool for bounty management.")
     parser.add_argument("--config", help="Config file to use rather than the default")
