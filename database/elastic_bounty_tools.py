@@ -56,7 +56,8 @@ def reconng_import(args, config):
     new_hosts = 0
     duplicate_hosts = 0
 
-    for row in cursor.execute("select * from hosts"):
+    query = "select * from hosts group by ip_address, host"
+    for row in cursor.execute(query):
         hostname = str(row[0])
         ip_address = str(row[1])
         source = str(row[6])
