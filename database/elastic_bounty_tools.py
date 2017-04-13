@@ -2,7 +2,6 @@ import elasticsearch
 import traceback
 import paramiko
 import sqlite3
-import time
 from datetime import datetime
 from connectivity import do_wrapper
 
@@ -21,13 +20,29 @@ def parse_args(args, config):
 
 
 def add_host(ip_address, hostname, source, workspace):
-    body = {"ip_address": ip_address, "hostname": hostname, "source": source, "workspace": workspace,
-            "timestamp": datetime.utcnow()}
-    elastic.index(index="bug_bounty", doc_type="host", body=body)
+    # Check if the host/ip combination is already in Elasticsearch
+    es_query = {
+        "query": {
+            "bool": {
+                "must": [
+                    {"term": {"ip_address": ip_address}},
+                    {"term": {"hostname": hostname}},
+                ],
+            }
+        }
+    }
+    result = elastic.search(index="bug_bounty", doc_type="host", body=es_query)
+
+    if result['hits']['total'] <= 0:
+        body = {"ip_address": ip_address, "hostname": hostname, "source": source, "workspace": workspace,
+                "timestamp": datetime.utcnow()}
+        elastic.index(index="bug_bounty", doc_type="host", body=body)
+
+        return True
+    return False
 
 
 def reconng_import(args, config):
-    host_dict = {}
     workspace = args.workspace
 
     # If we're given --droplet, collect the DB remotely
@@ -64,24 +79,10 @@ def reconng_import(args, config):
         hostname = str(row[0])
         ip_address = str(row[1])
         source = str(row[6])
+        add_success = add_host(ip_address, hostname, source, workspace)
 
-        # Check if the host/ip combination is already in Elasticsearch
-        es_query = {
-            "query": {
-                "bool": {
-                    "must": [
-                        {"term": {"ip_address": ip_address}},
-                        {"term": {"hostname": hostname}},
-                    ],
-                }
-            }
-        }
-        result = elastic.search(index="bug_bounty", doc_type="host", body=es_query)
-
-        if result['hits']['total'] <= 0:
-            add_host(ip_address, hostname, source, workspace)
+        if add_success:
             new_hosts += 1
-
         else:
             duplicate_hosts += 1
 
