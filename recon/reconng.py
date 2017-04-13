@@ -5,43 +5,49 @@ from database.bounty_tools_db import BountyToolsDb
 
 
 def add_args(parser):
-    parser.add_argument("--runrecon", help="Execute recon-ng tasks", action="store_true")
+    parser.add_argument("--reconng", help="Execute recon-ng tasks", action="store_true")
     parser.add_argument("--dbimport", help="Name of the workspace", action="store_true")
     parser.add_argument("--autocleanup", help="Cleanup and remove the VM when completed", action="store_true")
     parser.add_argument("--domains", help="List of domains to target", nargs='+')
 
 
 def parse_args(args, config):
-    # If we were passed a --droplet argument
-    if args.droplet is not None:
+
+    # If we're passed reconng
+    if args.reconng:
+        # Make sure we're given a workspace
         if args.workspace is not None:
-            if args.dbimport:
+            workspace = args.workspace
+            droplet = None
+
+            # If we were passed a --droplet argument
+            if args.droplet is not None:
                 droplet = do_wrapper.get_droplet(args.droplet, config)
-                import_to_db(droplet, config, args.workspace)
-            elif args.runrecon and args.domains is not None:
-                droplet = do_wrapper.get_droplet(args.droplet, config)
-                run_recon(droplet, config, args.workspace, args.domains)
+            # If we were passed a --createvm argument
+            elif args.createvm:
+                droplet = do_wrapper.create_vm(config)
 
-    # If we were passed a --createvm argument
-    elif args.runrecon and args.createvm and (args.workspace is not None) and (args.domains is not None):
-        # print("Running recon and creating VM")
-        droplet = do_wrapper.create_vm(config)
-        workspace = args.workspace
-        domains = args.domains
-        run_recon(droplet, config, workspace, domains)
+            if droplet is not None:
+                if args.dbimport:
+                    import_to_db(droplet, config, args.workspace)
 
-        if args.autocleanup:
-            # Localize the data
-            import_to_db(droplet, config, workspace)
+                elif args.domains is not None:
+                    droplet = do_wrapper.get_droplet(args.droplet, config)
+                    run_recon(droplet, config, args.workspace, args.domains)
 
-            # Destroy the droplet
-            print("Destroying the recon droplet...")
-            droplet.destroy()
-            print("Destroyed.")
+                    if args.autocleanup:
+                        # Localize the data
+                        import_to_db(droplet, config, workspace)
 
-    elif args.runrecon:
-        print("Required arguments not passed. Need either --createvm or --droplet to execute, along with "
-              "--workspace and --domains")
+                        # Destroy the droplet
+                        print("Destroying the recon droplet...")
+                        droplet.destroy()
+                        print("Destroyed.")
+
+        # If we were passed reconng, but didn't get all the requirements
+        else:
+            print("Required arguments not passed. Need either --createvm or --droplet to execute, along with "
+                  "--workspace and --domains")
 
 
 def import_to_db(droplet, config, workspace):
