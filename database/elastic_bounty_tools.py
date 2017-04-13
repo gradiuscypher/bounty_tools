@@ -25,7 +25,7 @@ def add_host(ip_address, hostname, source, workspace, time_range="7d"):
         "query": {
             "bool": {
                 "must": [
-                    {"range": {"@timestamp": {"gte": "now-{}".format(time_range), "lte": "now"}}},
+                    {"range": {"timestamp": {"gte": "now-{}".format(time_range), "lte": "now"}}},
                     {"term": {"ip_address": ip_address}},
                     {"term": {"hostname": hostname}},
                 ],
