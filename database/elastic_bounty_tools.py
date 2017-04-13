@@ -19,12 +19,13 @@ def parse_args(args, config):
             reconng_import(args, config)
 
 
-def add_host(ip_address, hostname, source, workspace):
+def add_host(ip_address, hostname, source, workspace, time_range="7d"):
     # Check if the host/ip combination is already in Elasticsearch
     es_query = {
         "query": {
             "bool": {
                 "must": [
+                    {"range": {"@timestamp": {"gte": "now-{}".format(time_range), "lte": "now"}}},
                     {"term": {"ip_address": ip_address}},
                     {"term": {"hostname": hostname}},
                 ],
