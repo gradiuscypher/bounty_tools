@@ -1,12 +1,14 @@
 import paramiko
 import sqlite3
+import database.elastic_bounty_tools
 from connectivity import do_wrapper
 from database.bounty_tools_db import BountyToolsDb
 
 
 def add_args(parser):
     parser.add_argument("--reconng", help="Execute recon-ng tasks", action="store_true")
-    parser.add_argument("--dbimport", help="Name of the workspace", action="store_true")
+    parser.add_argument("--reconimport", help="Import recon results to DB", action="store_true")
+    parser.add_argument("--dbimport", help="Import recon to local DB", action="store_true")
     parser.add_argument("--autocleanup", help="Cleanup and remove the VM when completed", action="store_true")
     parser.add_argument("--domains", help="List of domains to target", nargs='+')
 
@@ -28,8 +30,11 @@ def parse_args(args, config):
                 droplet = do_wrapper.create_vm(config)
 
             if droplet is not None:
-                if args.dbimport:
-                    import_to_db(droplet, config, args.workspace)
+                if args.reconimport:
+                    if args.dbimport:
+                        import_to_db(droplet, config, args.workspace)
+                    elif args.elastic:
+                        database.elastic_bounty_tools.reconng_import(args, config)
 
                 elif args.domains is not None:
                     droplet = do_wrapper.get_droplet(args.droplet, config)

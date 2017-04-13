@@ -10,6 +10,7 @@ elastic = elasticsearch.Elasticsearch(["es.lab.grds.io:9200"])
 
 
 def add_args(parser):
+    parser.add_argument("--elastic", help="All importing should use Elasticsearch", action="store_true")
     parser.add_argument("--esimport", help="Import the workspace into Elasticsearch", action="store_true")
 
 
