@@ -1,8 +1,13 @@
 import paramiko
 import sqlite3
+import logging.config
 import database.elastic_bounty_tools
 from connectivity import do_wrapper
 from database.bounty_tools_db import BountyToolsDb
+
+# Setup logging
+logging.config.fileConfig('logging.conf')
+logger = logging.getLogger('reconng')
 
 
 def add_args(parser):

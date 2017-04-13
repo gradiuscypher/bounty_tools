@@ -2,12 +2,20 @@
 
 import argparse
 import configparser
+import logging.config
 from recon import reconng, crt_ssl
 from enrichment import shodan
 from connectivity import do_wrapper
 from database import elastic_bounty_tools
 from reporting import console
 from automation import automation
+
+# Configure Logging
+logging.config.fileConfig('logging.conf', disable_existing_loggers=False)
+logger = logging.getLogger('bounty_tools')
+logging.getLogger("elasticsearch").setLevel(logging.WARNING)
+logging.getLogger("urllib3").setLevel(logging.WARNING)
+logging.getLogger("requests").setLevel(logging.WARNING)
 
 
 if __name__ == "__main__":
