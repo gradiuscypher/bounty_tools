@@ -1,5 +1,7 @@
 import time
+import traceback
 import censys.ipv4
+from censys.base import CensysNotFoundException, CensysRateLimitExceededException
 from database import elastic_bounty_tools
 
 
@@ -21,13 +23,36 @@ def ip_info(config, ip_address):
 
 
 def enrich_elastic(args, config):
-    # TODO: Catch 404, better progress tracking
     ip_list = elastic_bounty_tools.get_unique_ips(args.workspace)
+    total_ips = len(ip_list)
+    completed = 0
+    no_result = 0
 
     for ip in ip_list:
-        enrich_info = ip_info(config, ip['key'])
-        asn_owner = enrich_info['autonomous_system']['name']
-        protocols = enrich_info['protocols']
-        elastic_bounty_tools.add_field_to_ip(args.workspace, ip['key'], "asn_owner", asn_owner)
-        elastic_bounty_tools.add_field_to_ip(args.workspace, ip['key'], "protocols", protocols)
-        print(asn_owner, protocols, ip)
+        print("{} Remaining | {} Completed | {} No Results".format(total_ips, completed, no_result), end="\r")
+
+        try:
+            enrich_info = ip_info(config, ip['key'])
+            asn_owner = enrich_info['autonomous_system']['name']
+            protocols = enrich_info['protocols']
+            elastic_bounty_tools.add_field_to_ip(args.workspace, ip['key'], "asn_owner", asn_owner)
+            elastic_bounty_tools.add_field_to_ip(args.workspace, ip['key'], "protocols", protocols)
+            total_ips -= 1
+            completed += 1
+
+        except KeyboardInterrupt:
+            raise
+
+        except CensysRateLimitExceededException:
+            # TODO: Need to wait for more API calls
+            print("YOU STILL NEED TO IMPLEMENT API WAITING")
+            print(traceback.format_exc())
+            raise
+
+        except CensysNotFoundException:
+            no_result += 1
+
+        except:
+            print(traceback.format_exc())
+
+    print("{} Remaining | {} Completed | {} No Results".format(total_ips, completed, no_result))
