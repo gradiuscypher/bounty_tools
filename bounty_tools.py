@@ -4,7 +4,7 @@ import argparse
 import configparser
 import logging.config
 from recon import reconng, crt_ssl
-from enrichment import shodan
+from enrichment import shodan, censys
 from connectivity import do_wrapper
 from database import elastic_bounty_tools
 from reporting import console
@@ -22,7 +22,7 @@ logging.getLogger("paramiko").setLevel(logging.WARNING)
 
 if __name__ == "__main__":
     # List of plugins to use
-    plugin_list = [reconng, do_wrapper, console, shodan, crt_ssl, elastic_bounty_tools, automation]
+    plugin_list = [reconng, do_wrapper, console, shodan, crt_ssl, elastic_bounty_tools, automation, censys]
 
     parser = argparse.ArgumentParser(description="Command line tool for bounty management.")
     parser.add_argument("--config", help="Config file to use rather than the default")

@@ -74,6 +74,47 @@ def add_port(ip_address, port, source, workspace, time_range="7d"):
     return False
 
 
+def add_field_to_ip(workspace, ip_address, field_name, field_value, time_range="7d"):
+    # ref: https://www.elastic.co/guide/en/elasticsearch/reference/current/docs-update.html
+    # ref: https://www.elastic.co/guide/en/elasticsearch/reference/current/docs-update-by-query.html - version conflict
+    upquery = {
+        'conflicts': 'proceed',
+        'query': {
+            'bool': {
+                'must': [
+                    {'range': {'timestamp': {'gte': 'now-{}'.format(time_range), 'lte': 'now'}}},
+                    {'term': {'workspace': workspace}},
+                    {'term': {'ip_address': ip_address}}
+                ]}
+        },
+        'script': {
+            'inline': 'ctx._source.{} = "{}"'.format(field_name, field_value),
+            'lang': 'painless'
+        }
+    }
+    elastic.update_by_query(index="bug_bounty", doc_type="host", body=upquery)
+
+
+def remove_field_from_ip(workspace, ip_address, field_name, time_range="7d"):
+    # ref: https://www.elastic.co/guide/en/elasticsearch/reference/current/docs-update.html
+    upquery = {
+        'conflicts': 'proceed',
+        'query': {
+            'bool': {
+                'must': [
+                    {'range': {'timestamp': {'gte': 'now-{}'.format(time_range), 'lte': 'now'}}},
+                    {'term': {'workspace': workspace}},
+                    {'term': {'ip_address': ip_address}}
+                ]}
+        },
+        'script': {
+            'inline': 'ctx._source.remove("{}")'.format(field_name),
+            'lang': 'painless'
+        }
+    }
+    elastic.update_by_query(index="bug_bounty", doc_type="host", body=upquery)
+
+
 def get_hosts(workspace, time_range="7d"):
     # Query for first set of hosts
     es_query = {

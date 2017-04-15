@@ -9,3 +9,7 @@ api_key =
 
 [Elastic]
 host =
+
+[Censys]
+api_id =
+api_secret =
