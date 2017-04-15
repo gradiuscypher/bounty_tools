@@ -6,3 +6,6 @@ setup_script = https://raw.githubusercontent.com/gradiuscypher/bounty_tools/mast
 
 [Shodan]
 api_key =
+
+[Elastic]
+host =

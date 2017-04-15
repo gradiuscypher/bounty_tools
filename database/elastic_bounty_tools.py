@@ -2,10 +2,17 @@ import elasticsearch
 import traceback
 import paramiko
 import sqlite3
+import configparser
 from datetime import datetime
 from connectivity import do_wrapper
 
-elastic = elasticsearch.Elasticsearch(["es.lab.grds.io:9200"])
+
+# Grab config for ES host
+config = configparser.RawConfigParser()
+config.read("config.conf")
+elastic_host = config.get("Elastic", "host")
+
+elastic = elasticsearch.Elasticsearch([elastic_host])
 
 
 def add_args(parser):
@@ -41,6 +48,92 @@ def add_host(ip_address, hostname, source, workspace, time_range="7d"):
 
         return True
     return False
+
+
+def add_port(ip_address, port, source, workspace, time_range="7d"):
+    # Check if the port/ip combination is already in Elasticsearch
+    es_query = {
+        "query": {
+            "bool": {
+                "must": [
+                    {"range": {"timestamp": {"gte": "now-{}".format(time_range), "lte": "now"}}},
+                    {"term": {"ip_address": ip_address}},
+                    {"term": {"port": port}},
+                ],
+            }
+        }
+    }
+    result = elastic.search(index="bug_bounty", doc_type="port", body=es_query)
+
+    if result['hits']['total'] <= 0:
+        body = {"ip_address": ip_address, "port": port, "source": source, "workspace": workspace,
+                "timestamp": datetime.utcnow()}
+        elastic.index(index="bug_bounty", doc_type="port", body=body)
+
+        return True
+    return False
+
+
+def get_hosts(workspace, time_range="7d"):
+    # Query for first set of hosts
+    es_query = {
+        "from": 0, "size": 100,
+        "query": {
+            "bool": {
+                "must": [
+                    {"range": {"timestamp": {"gte": "now-{}".format(time_range), "lte": "now"}}},
+                    {"term": {"workspace": workspace}},
+                ],
+            }
+        }
+    }
+    result = elastic.search(index="bug_bounty", doc_type="host", body=es_query, scroll="2m")
+    sid = result['_scroll_id']
+    scroll_size = result['hits']['total']
+
+    # Scroll the results
+    while scroll_size > 0:
+        result = elastic.scroll(scroll_id=sid, scroll="2m")
+        sid = result['_scroll_id']
+        scroll_size = len(result['hits']['hits'])
+        print(result['hits']['hits'][0]['_source']['ip_address'])
+
+
+def get_unique_ips(workspace, time_range="7d"):
+    # Query for first set of hosts
+    es_query = {
+        "from": 0, "size": 100,
+        "query": {
+            "bool": {
+                "must": [
+                    {"range": {"timestamp": {"gte": "now-{}".format(time_range), "lte": "now"}}},
+                    {"term": {"workspace": workspace}},
+                ],
+            }
+        }
+    }
+    result = elastic.search(index="bug_bounty", doc_type="host", body=es_query)
+    total_results = result['hits']['total']
+
+    # Query for aggregation results
+    es_query = {
+        "from": 0, "size": 10,
+        "aggs": {
+            "ip_addresses": {
+                "terms": {"field": "ip_address", "size": total_results+10}
+            }
+        },
+        "query": {
+            "bool": {
+                "must": [
+                    {"range": {"timestamp": {"gte": "now-{}".format(time_range), "lte": "now"}}},
+                    {"term": {"workspace": workspace}},
+                ],
+            }
+        }
+    }
+    result = elastic.search(index="bug_bounty", doc_type="host", body=es_query)
+    return result['aggregations']['ip_addresses']['buckets']
 
 
 def reconng_import(args, config):
@@ -105,13 +198,12 @@ def create_index():
             }
         }
 
-        shodan_port_mapping = {
-            "shodan_port": {
+        port_mapping = {
+            "port": {
                 "properties": {
                     "ip_address": {"type": "ip"},
                     "source": {"type": "string", "index": "not_analyzed"},
                     "workspace": {"type": "string", "index": "not_analyzed"},
-                    "hostname": {"type": "string", "index": "not_analyzed"},
                     "port": {"type": "integer"},
                     "timestamp": {"type": "date"},
                 }
@@ -132,7 +224,7 @@ def create_index():
 
         elastic.indices.create("bug_bounty")
         elastic.indices.put_mapping(index="bug_bounty", doc_type="host", body=host_mapping)
-        elastic.indices.put_mapping(index="bug_bounty", doc_type="shodan_port", body=shodan_port_mapping)
+        elastic.indices.put_mapping(index="bug_bounty", doc_type="port", body=port_mapping)
         elastic.indices.put_mapping(index="bug_bounty", doc_type="shodan_metadata", body=shodan_metadata_mapping)
 
     except:

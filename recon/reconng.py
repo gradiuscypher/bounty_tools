@@ -23,16 +23,11 @@ def parse_args(args, config):
     # If we're passed reconng
     if args.reconng:
         # Make sure we're given a workspace
-        if args.workspace is not None:
+        if args.workspace is not None and args.droplet is not None:
             workspace = args.workspace
-            droplet = None
 
             # If we were passed a --droplet argument
-            if args.droplet is not None:
-                droplet = do_wrapper.get_droplet(args.droplet, config)
-            # If we were passed a --createvm argument
-            elif args.createvm:
-                droplet = do_wrapper.create_vm(config)
+            droplet = do_wrapper.get_droplet(args.droplet, config)
 
             if droplet is not None:
                 if args.reconimport:

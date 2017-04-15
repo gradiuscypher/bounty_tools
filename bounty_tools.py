@@ -16,6 +16,8 @@ logger = logging.getLogger('bounty_tools')
 logging.getLogger("elasticsearch").setLevel(logging.WARNING)
 logging.getLogger("urllib3").setLevel(logging.WARNING)
 logging.getLogger("requests").setLevel(logging.WARNING)
+logging.getLogger("digitalocean").setLevel(logging.WARNING)
+logging.getLogger("paramiko").setLevel(logging.WARNING)
 
 
 if __name__ == "__main__":

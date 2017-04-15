@@ -11,6 +11,8 @@ def add_args(parser):
 def parse_args(args, config):
     if args.listdroplets:
         list_droplets(config)
+    if args.createvm:
+        droplet = create_vm(config)
 
 
 def create_vm(config):
