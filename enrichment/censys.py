@@ -1,8 +1,10 @@
-import time
 import traceback
+import time
 import censys.ipv4
 from censys.base import CensysNotFoundException, CensysRateLimitExceededException
 from database import elastic_bounty_tools
+
+source = "censys"
 
 
 def add_args(parser):
@@ -27,32 +29,47 @@ def enrich_elastic(args, config):
     total_ips = len(ip_list)
     completed = 0
     no_result = 0
+    new_ports = 0
 
     for ip in ip_list:
-        print("{} Remaining | {} Completed | {} No Results".format(total_ips, completed, no_result), end="\r")
+        print("{} Remaining | {} Completed | {} New Ports | {} No Results".format(total_ips, completed, new_ports, no_result), )
 
-        try:
-            enrich_info = ip_info(config, ip['key'])
-            asn_owner = enrich_info['autonomous_system']['name']
-            protocols = enrich_info['protocols']
-            elastic_bounty_tools.add_field_to_ip(args.workspace, ip['key'], "asn_owner", asn_owner)
-            elastic_bounty_tools.add_field_to_ip(args.workspace, ip['key'], "protocols", protocols)
-            total_ips -= 1
-            completed += 1
+        if not ip['key'].startswith("10."):
+            try:
+                enrich_info = ip_info(config, ip['key'])
+                asn_owner = enrich_info['autonomous_system']['name']
+                protocols = enrich_info['protocols']
+                elastic_bounty_tools.add_field_to_ip(args.workspace, ip['key'], "asn_owner", asn_owner)
+                elastic_bounty_tools.add_field_to_ip(args.workspace, ip['key'], "protocols", protocols)
+                total_ips -= 1
+                completed += 1
 
-        except KeyboardInterrupt:
-            raise
+                # Add ports to port list
+                for port in protocols:
+                    try:
+                        port = int(port.split("/")[0])
+                        newport = elastic_bounty_tools.add_port(ip['key'], port, source, args.workspace)
 
-        except CensysRateLimitExceededException:
-            # TODO: Need to wait for more API calls
-            print("YOU STILL NEED TO IMPLEMENT API WAITING")
-            print(traceback.format_exc())
-            raise
+                        if newport:
+                            new_ports += 1
+                    except:
+                        print("Failed to add port to port docs:\n", traceback.format_exc())
 
-        except CensysNotFoundException:
-            no_result += 1
+            except KeyboardInterrupt:
+                raise
 
-        except:
-            print(traceback.format_exc())
+            except CensysRateLimitExceededException:
+                # TODO: Need to wait for more API calls
+                print("YOU STILL NEED TO IMPLEMENT BETTER API WAITING")
+                print("Sleeping for 5 minutes to wait for API permission...")
+                time.sleep(300)
+                print(traceback.format_exc())
+                raise
 
-    print("{} Remaining | {} Completed | {} No Results".format(total_ips, completed, no_result))
+            except CensysNotFoundException:
+                no_result += 1
+
+            except:
+                print(traceback.format_exc())
+
+    print("{} Remaining | {} Completed | {} New Ports | {} No Results".format(total_ips, completed, new_ports, no_result))
