@@ -54,6 +54,7 @@ def enrich_elastic(args, config):
                             new_ports += 1
                     except:
                         print("Failed to add port to port docs:\n", traceback.format_exc())
+                time.sleep(2.1)
 
             except KeyboardInterrupt:
                 raise
