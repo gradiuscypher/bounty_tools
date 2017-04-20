@@ -1,5 +1,7 @@
 import json
 import digitalocean
+import multiprocessing
+import time
 import logging.config
 from recon import reconng
 from connectivity import do_wrapper
@@ -36,11 +38,35 @@ def bulk_recon(args, config, json_hosts):
             more_droplets = required_droplets - len(droplets)
             logger.debug("Creating {} more droplets".format(more_droplets))
 
+            jobs = []
             for x in range(0, more_droplets):
-                do_wrapper.create_vm(config)
+                mp_worker = multiprocessing.Process(target=do_wrapper.create_vm, args=(config,))
+                jobs.append(mp_worker)
                 logger.debug("Making a droplet...")
+                mp_worker.start()
+
+            # Iterate over the job list and wait for each process to be complete
+            while len(jobs) > 0:
+                jobs = [job for job in jobs if job.is_alive()]
+                print("Waiting for {} jobs, sleeping...".format(len(jobs)))
+                time.sleep(5)
+
+        bounty_droplets = manager.get_all_droplets(tag_name="bounty")
+        total_targets = len(json_hosts)
+        print(total_targets)
 
         # Distribute scans and launch, then collect results and run enrichment, do this in multiprocess
+        # for target in json_hosts:
+        #     args.workspace = target
+        #     args.domains = json_hosts[target]
+
+            # Pick the right droplet
+            # args.droplet = the_right_droplet
+
+            # run recon and enrichment
+            # reconng.parse_args(args, config)
+            # elastic_bounty_tools.parse_args(args, config)
+
 
     else:
         if args.droplet is None:

@@ -62,6 +62,11 @@ def create_vm(config):
     # Print the output of configuration
     for line in iter(lambda: stdout.readline(2048), ""):
         print(line)
+
+    tag = digitalocean.Tag(token=manager.token, name="bounty")
+    tag.create()
+    tag.add_droplets([str(droplet.id)])
+
     print("Droplet Created.")
 
     print(" ID | IP Addr | Name | Tags")
