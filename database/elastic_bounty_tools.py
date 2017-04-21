@@ -183,7 +183,10 @@ def reconng_import(args, config):
     # If we're given --droplet, collect the DB remotely
     # Otherwise assume the file is already local
     if args.droplet is not None:
-        droplet = do_wrapper.get_droplet(args.droplet, config)
+        if args.bulkrecon:
+            droplet = args.droplet
+        else:
+            droplet = do_wrapper.get_droplet(args.droplet, config)
 
         # Setup SSH
         ssh_key_filename = config.get("DigitalOcean", "ssh_key_filename")

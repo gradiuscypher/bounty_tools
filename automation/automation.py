@@ -1,4 +1,5 @@
 import json
+import random
 import digitalocean
 import multiprocessing
 import time
@@ -53,20 +54,26 @@ def bulk_recon(args, config, json_hosts):
 
         bounty_droplets = manager.get_all_droplets(tag_name="bounty")
         total_targets = len(json_hosts)
-        print(total_targets)
+
+        # Build work queue
+        work_queue = multiprocessing.Queue()
+        for target in json_hosts:
+            work_queue.put((target, json_hosts[target]))
+
+        # Build workers
+        droplet_workers = []
+        for droplet in bounty_droplets:
+            p = multiprocessing.Process(target=droplet_worker, args=(args, config, droplet, work_queue,))
+            droplet_workers.append(p)
 
         # Distribute scans and launch, then collect results and run enrichment, do this in multiprocess
-        # for target in json_hosts:
-        #     args.workspace = target
-        #     args.domains = json_hosts[target]
+        for worker in droplet_workers:
+            worker.start()
 
-            # Pick the right droplet
-            # args.droplet = the_right_droplet
-
-            # run recon and enrichment
-            # reconng.parse_args(args, config)
-            # elastic_bounty_tools.parse_args(args, config)
-
+        # Wait for all workers
+        while not work_queue.empty():
+            print("Still working ... ", end="\r")
+            time.sleep(1)
 
     else:
         if args.droplet is None:
@@ -77,3 +84,18 @@ def bulk_recon(args, config, json_hosts):
             args.domains = json_hosts[target]
             reconng.parse_args(args, config)
             elastic_bounty_tools.parse_args(args, config)
+
+
+def droplet_worker(args, config, droplet, queue):
+    while not queue.empty():
+        # Get target info from queue
+        print(droplet.id, "Grabbing work...")
+        target = queue.get()
+        args.workspace = target[0]
+        args.domains = target[1]
+        args.droplet = droplet
+
+        # Run recon and import to elastic
+        reconng.parse_args(args, config)
+    else:
+        print("queue is empty")

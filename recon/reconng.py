@@ -19,25 +19,25 @@ def add_args(parser):
 
 
 def parse_args(args, config):
-
+    droplet = None
     # If we're passed reconng
     if args.reconng:
         # Make sure we're given a workspace
-        if args.workspace is not None and args.droplet is not None:
+        if args.workspace is not None and (args.droplet is not None or args.bulkrecon):
             workspace = args.workspace
 
+            # If we're using bulkrecon
+            if args.bulkrecon:
+                droplet = args.droplet
             # If we were passed a --droplet argument
-            droplet = do_wrapper.get_droplet(args.droplet, config)
+            elif args.droplet is not None and not args.bulkrecon:
+                print("IN HERE DONT KNOW WHY")
+                droplet = do_wrapper.get_droplet(args.droplet, config)
 
             if droplet is not None:
-                if args.reconimport:
-                    if args.dbimport:
-                        import_to_db(droplet, config, args.workspace)
-                    elif args.elastic:
-                        database.elastic_bounty_tools.reconng_import(args, config)
-
-                elif args.domains is not None:
-                    droplet = do_wrapper.get_droplet(args.droplet, config)
+                print("YO THIS IS DROPLET", droplet)
+                if args.domains is not None:
+                    # droplet = do_wrapper.get_droplet(args.droplet, config)
                     run_recon(droplet, config, args.workspace, args.domains)
 
                     if args.autocleanup:
@@ -48,6 +48,12 @@ def parse_args(args, config):
                         print("Destroying the recon droplet...")
                         droplet.destroy()
                         print("Destroyed.")
+
+                if args.reconimport:
+                    if args.dbimport:
+                        import_to_db(droplet, config, args.workspace)
+                    elif args.elastic:
+                        database.elastic_bounty_tools.reconng_import(args, config)
 
         # If we were passed reconng, but didn't get all the requirements
         else:
