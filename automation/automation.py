@@ -15,6 +15,7 @@ logger = logging.getLogger('bounty_tools')
 
 def add_args(parser):
     parser.add_argument("--bulkrecon", help="Run recon on a bulk set of hosts in a JSON file", action="store_true")
+    parser.add_argument("--bulkelastic", help="Import each host into elastic", action="store_true")
     parser.add_argument("--hostjson", help="JSON file containing list of workspaces and targets")
     parser.add_argument("--distribute", help="Number of scanners to distribute scans across")
 
@@ -52,28 +53,22 @@ def bulk_recon(args, config, json_hosts):
                 print("Waiting for {} jobs, sleeping...".format(len(jobs)))
                 time.sleep(5)
 
+        work_queue = multiprocessing.Queue()
         bounty_droplets = manager.get_all_droplets(tag_name="bounty")
         total_targets = len(json_hosts)
+        worker_list = []
 
-        # Build work queue
-        work_queue = multiprocessing.Queue()
-        for target in json_hosts:
-            work_queue.put((target, json_hosts[target]))
+        # Add work to the queue
+        for host in json_hosts:
+            work_queue.put((host, json_hosts[host]))
 
-        # Build workers
-        droplet_workers = []
+        # Add workers to a list
         for droplet in bounty_droplets:
-            p = multiprocessing.Process(target=droplet_worker, args=(args, config, droplet, work_queue,))
-            droplet_workers.append(p)
+            worker = multiprocessing.Process(target=droplet_worker, args=(args, config, droplet, work_queue))
+            worker_list.append(worker)
 
-        # Distribute scans and launch, then collect results and run enrichment, do this in multiprocess
-        for worker in droplet_workers:
+        for worker in worker_list:
             worker.start()
-
-        # Wait for all workers
-        while not work_queue.empty():
-            print("Still working ... ", end="\r")
-            time.sleep(1)
 
     else:
         if args.droplet is None:
@@ -86,16 +81,19 @@ def bulk_recon(args, config, json_hosts):
             elastic_bounty_tools.parse_args(args, config)
 
 
-def droplet_worker(args, config, droplet, queue):
-    while not queue.empty():
+def droplet_worker(args, config, droplet, work_queue):
+    while not work_queue.empty():
         # Get target info from queue
-        print(droplet.id, "Grabbing work...")
-        target = queue.get()
+        target = work_queue.get()
+        print(droplet.id, "Grabbing work...{}")
+
         args.workspace = target[0]
         args.domains = target[1]
         args.droplet = droplet
 
         # Run recon and import to elastic
         reconng.parse_args(args, config)
+        elastic_bounty_tools.reconng_import(args, config)
+        print("Done working...")
     else:
-        print("queue is empty")
+        print("DONE")
