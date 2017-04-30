@@ -6,6 +6,7 @@ import paramiko
 def add_args(parser):
     parser.add_argument("--createvm", help="Create a Digital Ocean VM to execute on", action="store_true")
     parser.add_argument("--listdroplets", help="List available DO Droplets", action="store_true")
+    parser.add_argument("--cleanupdroplets", help="Destroys all recon droplets")
 
 
 def parse_args(args, config):
@@ -13,6 +14,17 @@ def parse_args(args, config):
         list_droplets(config)
     if args.createvm:
         droplet = create_vm(config)
+
+
+def cleanup_droplets(config):
+    # build the digital ocean manager object
+    manager = digitalocean.Manager(token=config.get("DigitalOcean", "api_key"))
+
+    droplets = manager.get_all_droplets(tag_name="bounty")
+
+    # Delete all droplets that match the tag
+    for droplet in droplets:
+        droplet.destroy()
 
 
 def create_vm(config):
