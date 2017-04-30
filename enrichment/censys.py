@@ -36,7 +36,7 @@ def enrich_elastic(args, config):
     new_ports = 0
 
     for ip in ip_list:
-        print("{} Remaining | {} Completed | {} New Ports | {} No Results".format(total_ips, completed, new_ports, no_result), )
+        print("{} Remaining | {} Completed | {} New Ports | {} No Results".format(total_ips, completed, new_ports, no_result), end="\r")
 
         if not ip['key'].startswith("10."):
             try:
