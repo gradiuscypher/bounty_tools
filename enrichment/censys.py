@@ -68,8 +68,7 @@ def enrich_elastic(args, config):
                 print("YOU STILL NEED TO IMPLEMENT BETTER API WAITING")
                 print("Sleeping for 1 minutes to wait for API permission...")
                 time.sleep(60)
-                print(traceback.format_exc())
-                raise
+                # print(traceback.format_exc())
 
             except CensysNotFoundException:
                 no_result += 1
