@@ -81,6 +81,13 @@ def bulk_recon(args, config, json_hosts):
             elastic_bounty_tools.parse_args(args, config)
 
 
+def bulk_elastic():
+    # Connect to each droplet, list and grab the relevant files, and import them
+    # Will be useful if user forgets --elastic on --bulkrecon
+    # TODO: Complete
+    pass
+
+
 def droplet_worker(args, config, droplet, work_queue):
     while not work_queue.empty():
         # Get target info from queue
