@@ -26,6 +26,7 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(description="Command line tool for bounty management.")
     parser.add_argument("--config", help="Config file to use rather than the default")
+    parser.add_argument("--bulkenrich", help="Run enrichment tasks on all workspaces", action="store_true")
     parser.add_argument("--debug", help="Debug printing mode", action="store_true")
     parser.add_argument("--droplet", help="Digital Ocean droplet ID for execution")
     parser.add_argument("--workspace", help="Name of the workspace")

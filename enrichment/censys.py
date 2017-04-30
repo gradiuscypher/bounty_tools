@@ -15,6 +15,10 @@ def parse_args(args, config):
     if args.censys and args.workspace is not None:
         if args.elastic:
             enrich_elastic(args, config)
+    elif args.censys and args.bulkenrich:
+        if args.elastic:
+            args.workspace = ""
+            enrich_elastic(args, config)
 
 
 def ip_info(config, ip_address):
@@ -54,7 +58,7 @@ def enrich_elastic(args, config):
                             new_ports += 1
                     except:
                         print("Failed to add port to port docs:\n", traceback.format_exc())
-                time.sleep(2.1)
+                time.sleep(1.5)
 
             except KeyboardInterrupt:
                 raise
@@ -62,8 +66,8 @@ def enrich_elastic(args, config):
             except CensysRateLimitExceededException:
                 # TODO: Need to wait for more API calls
                 print("YOU STILL NEED TO IMPLEMENT BETTER API WAITING")
-                print("Sleeping for 5 minutes to wait for API permission...")
-                time.sleep(300)
+                print("Sleeping for 1 minutes to wait for API permission...")
+                time.sleep(60)
                 print(traceback.format_exc())
                 raise
 

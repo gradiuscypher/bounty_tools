@@ -142,39 +142,70 @@ def get_hosts(workspace, time_range="7d"):
 
 def get_unique_ips(workspace, time_range="7d"):
     # Query for first set of hosts
-    es_query = {
-        "from": 0, "size": 100,
-        "query": {
-            "bool": {
-                "must": [
-                    {"range": {"timestamp": {"gte": "now-{}".format(time_range), "lte": "now"}}},
-                    {"term": {"workspace": workspace}},
-                ],
+    if workspace == "":
+        es_query = {
+            "from": 0, "size": 10000,
+            "query": {
+                "bool": {
+                    "must": [
+                        {"range": {"timestamp": {"gte": "now-{}".format(time_range), "lte": "now"}}},
+                    ],
+                }
             }
         }
-    }
+    else:
+        es_query = {
+            "from": 0, "size": 10000,
+            "query": {
+                "bool": {
+                    "must": [
+                        {"range": {"timestamp": {"gte": "now-{}".format(time_range), "lte": "now"}}},
+                        {"term": {"workspace": workspace}},
+                    ],
+                }
+            }
+        }
     result = elastic.search(index="bug_bounty", doc_type="host", body=es_query)
     total_results = result['hits']['total']
 
     # Query for aggregation results
-    es_query = {
-        "from": 0, "size": 10,
-        "aggs": {
-            "ip_addresses": {
-                "terms": {"field": "ip_address", "size": total_results+10}
-            }
-        },
-        "query": {
-            "bool": {
-                "must": [
-                    {"range": {"timestamp": {"gte": "now-{}".format(time_range), "lte": "now"}}},
-                    {"term": {"workspace": workspace}},
-                ],
+    if workspace == "":
+        es_query = {
+            "from": 0, "size": 10,
+            "aggs": {
+                "ip_addresses": {
+                    "terms": {"field": "ip_address", "size": total_results+10}
+                }
+            },
+            "query": {
+                "bool": {
+                    "must": [
+                        {"range": {"timestamp": {"gte": "now-{}".format(time_range), "lte": "now"}}},
+                    ],
+                }
             }
         }
-    }
-    result = elastic.search(index="bug_bounty", doc_type="host", body=es_query)
-    return result['aggregations']['ip_addresses']['buckets']
+        result = elastic.search(index="bug_bounty", doc_type="host", body=es_query)
+        return result['aggregations']['ip_addresses']['buckets']
+    else:
+        es_query = {
+            "from": 0, "size": 10,
+            "aggs": {
+                "ip_addresses": {
+                    "terms": {"field": "ip_address", "size": total_results+10}
+                }
+            },
+            "query": {
+                "bool": {
+                    "must": [
+                        {"range": {"timestamp": {"gte": "now-{}".format(time_range), "lte": "now"}}},
+                        {"term": {"workspace": workspace}},
+                    ],
+                }
+            }
+        }
+        result = elastic.search(index="bug_bounty", doc_type="host", body=es_query)
+        return result['aggregations']['ip_addresses']['buckets']
 
 
 def reconng_import(args, config):
