@@ -58,7 +58,7 @@ def enrich_elastic(args, config):
                             new_ports += 1
                     except:
                         print("Failed to add port to port docs:\n", traceback.format_exc())
-                time.sleep(1.5)
+                time.sleep(.5)
 
             except KeyboardInterrupt:
                 raise
@@ -66,7 +66,7 @@ def enrich_elastic(args, config):
             except CensysRateLimitExceededException:
                 # TODO: Need to wait for more API calls
                 print("YOU STILL NEED TO IMPLEMENT BETTER API WAITING")
-                print("Sleeping for 1 minutes to wait for API permission...")
+                print("Sleeping for 3 minutes to wait for API permission...\n")
                 time.sleep(180)
                 # print(traceback.format_exc())
 
@@ -76,4 +76,4 @@ def enrich_elastic(args, config):
             except:
                 print(traceback.format_exc())
 
-    print("{} Remaining | {} Completed | {} New Ports | {} No Results".format(total_ips, completed, new_ports, no_result))
+    print("{} Completed | {} New Ports | {} No Results".format(completed, new_ports, no_result))
