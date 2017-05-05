@@ -1,6 +1,7 @@
 import digitalocean
 import time
 import paramiko
+import json
 
 
 def add_args(parser):
@@ -67,6 +68,26 @@ def create_vm(config):
     ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
     print("Connecting to the droplet...")
     ssh.connect(droplet.ip_address, username="root", key_filename=ssh_key_filename)
+
+    # wget the firewall config and swap in relevant IP addresses to allow connectivity to the droplet
+    firewall_config = config.get("DigitalOcean", "firewall_config")
+    source_ips = config.get("DigitalOcean", "source_ips")
+
+    # build a comma separated list of ips to add to firewall config
+    ip_str = ""
+    for ip in json.loads(source_ips):
+        if ip_str == "":
+            ip_str += ip
+        else:
+            ip_str += "," + ip
+
+    # grab the firewall config
+    _, stdout, stderr = ssh.exec_command(
+        "wget {}".format(firewall_config))
+
+    # replace SOURCE_IPS in the config with ip_str
+    _, stdout, stderr = ssh.exec_command(
+        "sed -i 's/SOURCE_IPS/{}/g' iptables.rules".format(ip_str))
 
     # Configure the VM with the setup script
     print()
