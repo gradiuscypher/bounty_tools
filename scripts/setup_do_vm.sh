@@ -3,7 +3,10 @@
 
 # update packages and install new ones
 apt-get update && apt-get upgrade -y
-apt-get install nmap -y
+apt-get install nmap iptables-persistent -y
+
+# copy iptables.rules, save, and persist
+# cd /root
 
 # setup recon-ng
 cd /root
@@ -19,3 +22,5 @@ git clone https://github.com/robertdavidgraham/masscan
 cd masscan
 make
 make install
+
+# configure firewall for recon-rpc
