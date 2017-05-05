@@ -3,10 +3,11 @@
 
 # update packages and install new ones
 apt-get update && apt-get upgrade -y
-apt-get install nmap iptables-persistent -y
+apt-get install nmap -y
 
-# copy iptables.rules, save, and persist
-# cd /root
+# load iptables.rules
+cd /root
+iptables-restore iptables.rules
 
 # setup recon-ng
 cd /root
