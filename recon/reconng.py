@@ -1,5 +1,6 @@
 import paramiko
 import sqlite3
+import jsonrpclib
 import logging.config
 import database.elastic_bounty_tools
 from connectivity import do_wrapper
@@ -102,15 +103,7 @@ def import_to_db(droplet, config, workspace):
 
 
 def run_recon(droplet, config, workspace, domain_list):
-
-    # Setup SSH
-    ssh_key_filename = config.get("DigitalOcean", "ssh_key_filename")
-    ssh = paramiko.SSHClient()
-    ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-    print("Connecting to the droplet...")
-    ssh.connect(droplet.ip_address, username="root", key_filename=ssh_key_filename)
-
-    # Do all the stuff with recon-ng
+    # Recon modules to use
     recon_modules = [
         "recon/domains-hosts/google_site_web",
         "recon/domains-hosts/brute_hosts",
@@ -121,29 +114,13 @@ def run_recon(droplet, config, workspace, domain_list):
         "recon/hosts-hosts/resolve",
     ]
 
-    # Add domains to workspace
-    for domain in domain_list:
-        print("Adding domain: {}".format(domain))
-        _, stdout, stderr = ssh.exec_command('./recon-ng/recon-cli -w {} -C "add domains {}"'.format(workspace, domain))
-        # Print the output of execution
-        for line in iter(lambda: stdout.readline(2048), ""):
-            print(line)
-        print()
+    # Build recon-ng JSONRPC object
+    client = jsonrpclib.Server("http://{}:4141".format(droplet.ip_address))
+    session_id = client.init()
 
-    # Execute recon-ng modules
-    for module in recon_modules:
-        print("Executing recon-ng module: {}".format(module))
-        _, stdout, stderr = ssh.exec_command('./recon-ng/recon-cli -w {} -m "{}" -x'.format(workspace, module))
-        # Print the output of execution
-        for line in iter(lambda: stdout.readline(2048), ""):
-            print(line)
-        print()
+    # Create the workspace
+    client.add("workspaces")
 
-    # Remove hosts from recon-ng db where there is no IP
-    print("Removing hosts without IP addresses from the DB...")
-    _, stdout, stderr = ssh.exec_command(
-        './recon-ng/recon-cli -w {} -C "query delete from hosts where ip_address is null"'.format(workspace))
-    # Print the output of execution
-    for line in iter(lambda: stdout.readline(2048), ""):
-        print(line)
-    print()
+    # Add the domains
+
+    # Run the recon modules and save the output to elastic
