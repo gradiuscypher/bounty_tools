@@ -119,8 +119,15 @@ def run_recon(droplet, config, workspace, domain_list):
     session_id = client.init()
 
     # Create the workspace
-    client.add("workspaces")
+    client.workspace(workspace, session_id)
 
     # Add the domains
+    for domain in domain_list:
+        client.add("domains", domain, session_id)
 
-    # Run the recon modules and save the output to elastic
+    # Run the recon modules
+    for recon_module in recon_modules:
+        client.use(recon_module, session_id)
+        results = client.run(session_id)
+
+    # Collect the results and save them to Elastic
