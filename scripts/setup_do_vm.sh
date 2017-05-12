@@ -25,6 +25,8 @@ make
 make install
 
 # setup the rpc service with systemd
+cd /root
+chmod +x rpc_listener.sh
 cp rpc_listener.service /etc/systemd/system
 systemctl enable rpc_listener
 systemctl start rpc_listener
