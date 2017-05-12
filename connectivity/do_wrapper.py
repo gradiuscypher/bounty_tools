@@ -72,6 +72,8 @@ def create_vm(config):
     # wget the firewall config and swap in relevant IP addresses to allow connectivity to the droplet
     firewall_config = config.get("DigitalOcean", "firewall_config")
     source_ips = config.get("DigitalOcean", "source_ips")
+    rpc_script = config.get("DigitalOcean", "rpc_script")
+    rpc_service = config.get("DigitalOcean", "rpc_service")
 
     # build a comma separated list of ips to add to firewall config
     ip_str = ""
@@ -88,6 +90,14 @@ def create_vm(config):
     # replace SOURCE_IPS in the config with ip_str
     _, stdout, stderr = ssh.exec_command(
         "sed -i 's/SOURCE_IPS/{}/g' iptables.rules".format(ip_str))
+
+    # grab the rpc script
+    _, stdout, stderr = ssh.exec_command(
+        "wget {}".format(rpc_script))
+
+    # grab the rpc service file
+    _, stdout, stderr = ssh.exec_command(
+        "wget {}".format(rpc_service))
 
     # Configure the VM with the setup script
     print()

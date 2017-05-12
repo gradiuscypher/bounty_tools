@@ -24,4 +24,7 @@ cd masscan
 make
 make install
 
-# configure firewall for recon-rpc
+# setup the rpc service with systemd
+cp rpc_listener.service /etc/systemd/system
+systemctl enable rpc_listener
+systemctl start rpc_listener

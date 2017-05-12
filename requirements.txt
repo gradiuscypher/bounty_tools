@@ -21,7 +21,7 @@ ipython==5.1.0
 ipython-genutils==0.1.0
 itsdangerous==0.24
 Jinja2==2.9.5
-jsonrpclib==0.1.7
+jsonrpclib-pelix==0.3.0
 jsonschema==2.6.0
 MarkupSafe==0.23
 netaddr==0.7.19
