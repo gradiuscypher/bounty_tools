@@ -45,7 +45,7 @@ def add_host(ip_address, hostname, source, workspace, time_range="7d"):
         body = {"ip_address": ip_address, "hostname": hostname, "source": source, "workspace": workspace,
                 "timestamp": datetime.utcnow()}
         elastic.index(index="bug_bounty", doc_type="host", body=body)
-
+        elastic.indices.refresh(index="bug_bounty")
         return True
     return False
 
@@ -69,7 +69,7 @@ def add_port(ip_address, port, source, workspace, time_range="7d"):
         body = {"ip_address": ip_address, "port": port, "source": source, "workspace": workspace,
                 "timestamp": datetime.utcnow()}
         elastic.index(index="bug_bounty", doc_type="port", body=body)
-
+        elastic.indices.refresh(index="bug_bounty")
         return True
     return False
 

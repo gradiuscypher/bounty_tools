@@ -128,6 +128,10 @@ def run_recon(droplet, config, workspace, domain_list):
     # Run the recon modules
     for recon_module in recon_modules:
         client.use(recon_module, session_id)
-        results = client.run(session_id)
+        client.run(session_id)
 
     # Collect the results and save them to Elastic
+    results = client.show("hosts", session_id)
+
+    for host in results:
+        database.elastic_bounty_tools.add_host(host[2], host[1], host[7], workspace)
