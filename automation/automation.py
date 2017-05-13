@@ -1,12 +1,10 @@
 import json
-import random
 import digitalocean
 import multiprocessing
 import time
 import logging.config
 from recon import reconng
 from connectivity import do_wrapper
-from database import elastic_bounty_tools
 
 # Configure Logging
 logging.config.fileConfig('logging.conf', disable_existing_loggers=False)
@@ -15,7 +13,6 @@ logger = logging.getLogger('bounty_tools')
 
 def add_args(parser):
     parser.add_argument("--bulkrecon", help="Run recon on a bulk set of hosts in a JSON file", action="store_true")
-    parser.add_argument("--bulkelastic", help="Import each host into elastic", action="store_true")
     parser.add_argument("--hostjson", help="JSON file containing list of workspaces and targets")
     parser.add_argument("--distribute", help="Number of scanners to distribute scans across")
 
@@ -55,7 +52,6 @@ def bulk_recon(args, config, json_hosts):
 
         work_queue = multiprocessing.Queue()
         bounty_droplets = manager.get_all_droplets(tag_name="bounty")
-        total_targets = len(json_hosts)
         worker_list = []
 
         # Add work to the queue
@@ -78,14 +74,6 @@ def bulk_recon(args, config, json_hosts):
             args.workspace = target
             args.domains = json_hosts[target]
             reconng.parse_args(args, config)
-            elastic_bounty_tools.parse_args(args, config)
-
-
-def bulk_elastic():
-    # Connect to each droplet, list and grab the relevant files, and import them
-    # Will be useful if user forgets --elastic on --bulkrecon
-    # TODO: Complete
-    pass
 
 
 def droplet_worker(args, config, droplet, work_queue):
@@ -100,7 +88,6 @@ def droplet_worker(args, config, droplet, work_queue):
 
         # Run recon and import to elastic
         reconng.parse_args(args, config)
-        elastic_bounty_tools.reconng_import(args, config)
         print("Done working...")
     else:
         print("DONE")
