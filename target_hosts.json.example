@@ -1,5 +1,0 @@
-{
-  "workspace1": ["target1.com", "target2.net"],
-  "workspace2": ["target1.com"],
-  "workspace3": ["target1.com", "target2.net"],
-}

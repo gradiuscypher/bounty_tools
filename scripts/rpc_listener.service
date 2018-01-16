@@ -1,9 +1,0 @@
-[Unit]
-Description=RPC Listener for recon-rpc
-
-[Service]
-ExecStart=/root/rpc_listener.sh
-Restart=always
-
-[Install]
-WantedBy=multi-user.target
