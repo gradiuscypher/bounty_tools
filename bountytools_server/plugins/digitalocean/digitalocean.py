@@ -1,3 +1,6 @@
+import digitalocean
 from flask import Blueprint, request
 
-digitalocean = Blueprint('callback', __name__)
+# DO Library docs: https://github.com/koalalorenzo/python-digitalocean
+
+doconnector = Blueprint('callback', __name__)

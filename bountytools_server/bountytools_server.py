@@ -1,14 +1,14 @@
 #!/usr/bin/env python
 
 from flask import Flask
-from plugins.digitalocean.digitalocean import digitalocean
+from plugins.digitalocean.digitalocean import doconnector
 
 # Create the Flask app
 app = Flask(__name__)
 
 # Register Blueprint views
 # DigitalOcean Plugin for connectivity management
-app.register_blueprint(digitalocean, url_prefix='/digitalocean')
+app.register_blueprint(doconnector, url_prefix='/digitalocean')
 
 # Start the API
 if __name__ == '__main__':
