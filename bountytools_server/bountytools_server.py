@@ -1,14 +1,14 @@
 #!/usr/bin/env python
 
 from flask import Flask
-from plugins.reconng.reconng import reconng
+from plugins.digitalocean.digitalocean import digitalocean
 
 # Create the Flask app
 app = Flask(__name__)
 
 # Register Blueprint views
-# recon-ng API, leverages recon-ng's RPC server
-app.register_blueprint(reconng, url_prefix='/reconng')
+# DigitalOcean Plugin for connectivity management
+app.register_blueprint(digitalocean, url_prefix='/digitalocean')
 
 # Start the API
 if __name__ == '__main__':
