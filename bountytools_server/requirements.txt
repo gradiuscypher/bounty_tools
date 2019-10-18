@@ -11,5 +11,5 @@ pkg-resources==0.0.0
 python-digitalocean==1.13.2
 requests==2.18.4
 SQLAlchemy==1.2.8
-urllib3==1.23
+urllib3==1.24.2
 Werkzeug==0.14.1
